@@ -1,0 +1,54 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function isValidDemoBooking(data) {
+      return data.keys().hasAll(['name', 'whatsapp', 'grade', 'board', 'status', 'createdAt'])
+        && data.keys().hasOnly(['id', 'name', 'whatsapp', 'grade', 'board', 'slotLabel', 'slotTime', 'status', 'createdAt'])
+        && data.name is string && data.name.size() >= 2 && data.name.size() <= 100
+        && data.whatsapp is string && data.whatsapp.size() >= 5 && data.whatsapp.size() <= 25
+        && data.grade is string && data.grade.size() >= 1 && data.grade.size() <= 30
+        && data.board is string && data.board.size() >= 1 && data.board.size() <= 50
+        && data.status in ['pending', 'confirmed', 'completed', 'cancelled']
+        && data.createdAt is string && data.createdAt.size() <= 50;
+    }
+
+    function isValidDiagnosticAttempt(data) {
+      return data.keys().hasAll(['gradeGroup', 'selectedIndex', 'isCorrect', 'timestamp'])
+        && data.keys().hasOnly(['id', 'gradeGroup', 'question', 'selectedIndex', 'isCorrect', 'timestamp'])
+        && data.gradeGroup is string && data.gradeGroup.size() <= 20
+        && data.selectedIndex is int
+        && data.isCorrect is bool
+        && data.timestamp is string && data.timestamp.size() <= 50;
+    }
+
+    // Demo Bookings Collection
+    // Public parents can submit demo bookings; reads restricted
+    match /demoBookings/{bookingId} {
+      allow create: if isValidId(bookingId) && isValidDemoBooking(incoming());
+      allow read, update, delete: if false;
+    }
+
+    // Diagnostic Challenge Attempts
+    // Anonymous quiz submissions recorded for analytics
+    match /diagnosticAttempts/{attemptId} {
+      allow create: if isValidId(attemptId) && isValidDiagnosticAttempt(incoming());
+      allow read, update, delete: if false;
+    }
+  }
+}

@@ -1,0 +1,103 @@
+{
+  "entities": {
+    "DemoBooking": {
+      "title": "DemoBooking",
+      "description": "Represents a live 1:6 demo class booked by a parent for their student.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique booking identifier"
+        },
+        "name": {
+          "type": "string",
+          "description": "Parent or student full name",
+          "minLength": 2,
+          "maxLength": 100
+        },
+        "whatsapp": {
+          "type": "string",
+          "description": "WhatsApp contact number with country code",
+          "minLength": 5,
+          "maxLength": 25
+        },
+        "grade": {
+          "type": "string",
+          "description": "Student grade or class (e.g., Grade 5)",
+          "minLength": 1,
+          "maxLength": 30
+        },
+        "board": {
+          "type": "string",
+          "description": "Curriculum or school board (e.g. CBSE, ICSE, IB, Cambridge)",
+          "minLength": 1,
+          "maxLength": 50
+        },
+        "slotLabel": {
+          "type": "string",
+          "description": "Selected batch slot timing label",
+          "maxLength": 100
+        },
+        "slotTime": {
+          "type": "string",
+          "description": "Scheduled time description",
+          "maxLength": 100
+        },
+        "status": {
+          "type": "string",
+          "description": "Current status of the booking",
+          "enum": ["pending", "confirmed", "completed", "cancelled"]
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "ISO timestamp of when the booking was initiated"
+        }
+      },
+      "required": ["name", "whatsapp", "grade", "board", "status", "createdAt"]
+    },
+    "DiagnosticAttempt": {
+      "title": "DiagnosticAttempt",
+      "description": "Records student answers on interactive diagnostic challenge questions.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique diagnostic attempt identifier"
+        },
+        "gradeGroup": {
+          "type": "string",
+          "description": "Target grade group (e.g., 3&4, 5&6, 7&8, 9&10)",
+          "maxLength": 20
+        },
+        "question": {
+          "type": "string",
+          "description": "Question text",
+          "maxLength": 300
+        },
+        "selectedIndex": {
+          "type": "number",
+          "description": "Index of selected option"
+        },
+        "isCorrect": {
+          "type": "boolean",
+          "description": "Whether selected answer was correct"
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "ISO timestamp of attempt"
+        }
+      },
+      "required": ["gradeGroup", "selectedIndex", "isCorrect", "timestamp"]
+    }
+  },
+  "firestore": {
+    "/demoBookings/{bookingId}": {
+      "schema": "DemoBooking",
+      "description": "Collection of all live demo bookings submitted by parents."
+    },
+    "/diagnosticAttempts/{attemptId}": {
+      "schema": "DiagnosticAttempt",
+      "description": "Collection of anonymous diagnostic challenge quiz interactions."
+    }
+  }
+}

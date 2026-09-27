@@ -11,6 +11,7 @@ import { ParentReviewsPage } from "./components/ParentReviewsPage";
 import { FaqPage } from "./components/FaqPage";
 import { Footer } from "./components/Footer";
 import { DemoModal } from "./components/DemoModal";
+import { testFirestoreConnection } from "./firebase/config";
 
 export default function App() {
   const [demoModalOpen, setDemoModalOpen] = useState(false);
@@ -35,6 +36,8 @@ export default function App() {
 
   // Listen to hash changes for deep linking across all pages
   useEffect(() => {
+    testFirestoreConnection();
+
     const handleHash = () => {
       const hash = window.location.hash.replace("#", "").trim();
       if (!hash || hash === "home") {

@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { X, CheckCircle, MessageSquare, Send, Calendar, ArrowRight, Sparkles } from "lucide-react";
 import { BATCH_SLOTS, BUSINESS_WHATSAPP_NUMBER, getBatchKeyForGrade, BatchOption } from "../data/coachingData";
 import { CustomSelect } from "./CustomSelect";
+import { ConfettiBurst } from "./ConfettiBurst";
+import { saveDemoBooking } from "../firebase/dbService";
 
 interface DemoModalProps {
   isOpen: boolean;
@@ -17,6 +19,7 @@ export const DemoModal: React.FC<DemoModalProps> = ({ isOpen, onClose, prefillGr
   const [slotKey, setSlotKey] = useState("");
   const [consent, setConsent] = useState(true);
   const [isBooked, setIsBooked] = useState(false);
+  const [triggerConfetti, setTriggerConfetti] = useState(false);
   const [bookedDetails, setBookedDetails] = useState<{
     name: string;
     grade: string;
@@ -114,11 +117,26 @@ export const DemoModal: React.FC<DemoModalProps> = ({ isOpen, onClose, prefillGr
       whatsappText: notifyText
     });
 
+    // Persist booking to Firestore database
+    saveDemoBooking({
+      name: name.trim(),
+      whatsapp: whatsapp.trim(),
+      grade,
+      board,
+      slotLabel: selectedOption.label,
+      slotTime: batchGroup.time
+    }).catch((err) => {
+      console.warn("Firestore demo booking save encountered an issue:", err);
+    });
+
     setIsBooked(true);
+    setTriggerConfetti(false);
+    setTimeout(() => setTriggerConfetti(true), 50);
   };
 
   const handleReset = () => {
     setIsBooked(false);
+    setTriggerConfetti(false);
     setBookedDetails(null);
     setName("");
     setWhatsapp("");
@@ -325,6 +343,15 @@ export const DemoModal: React.FC<DemoModalProps> = ({ isOpen, onClose, prefillGr
           </div>
         )}
       </div>
+
+      {/* Confetti celebration for successful demo booking using canvas-confetti */}
+      <ConfettiBurst
+        active={triggerConfetti}
+        onComplete={() => setTriggerConfetti(false)}
+        origin={{ x: 0.5, y: 0.4 }}
+        particleCount={90}
+        multiBurst={true}
+      />
     </div>
   );
 };

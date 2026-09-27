@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { DIAGNOSTIC_QUESTIONS, DiagnosticQuestion } from "../data/coachingData";
 import { CheckCircle2, XCircle, ArrowRight, Lightbulb, Clock, Zap } from "lucide-react";
 import { DiagnosticVisualDiagram } from "./DiagnosticVisualDiagram";
+import { ConfettiBurst } from "./ConfettiBurst";
+import { recordDiagnosticAttempt } from "../firebase/dbService";
 
 interface InteractiveDiagnosticProps {
   onOpenDemo: (prefillGrade?: string) => void;
@@ -11,6 +13,7 @@ export const InteractiveDiagnostic: React.FC<InteractiveDiagnosticProps> = ({ on
   const [selectedGradeKey, setSelectedGradeKey] = useState<string>("3&4");
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, number | null>>({});
   const [showSolution, setShowSolution] = useState<Record<string, boolean>>({});
+  const [triggerConfetti, setTriggerConfetti] = useState<boolean>(false);
 
   const currentQuestion =
     DIAGNOSTIC_QUESTIONS.find((q) => q.gradeGroup === selectedGradeKey) || DIAGNOSTIC_QUESTIONS[0];
@@ -23,6 +26,20 @@ export const InteractiveDiagnostic: React.FC<InteractiveDiagnosticProps> = ({ on
   const handleSelectOption = (idx: number) => {
     setSelectedAnswers((prev) => ({ ...prev, [selectedGradeKey]: idx }));
     setShowSolution((prev) => ({ ...prev, [selectedGradeKey]: true }));
+    const isAnsCorrect = idx === currentQuestion.correctIndex;
+
+    // Record attempt asynchronously to Firestore database
+    recordDiagnosticAttempt({
+      gradeGroup: selectedGradeKey,
+      question: currentQuestion.question,
+      selectedIndex: idx,
+      isCorrect: isAnsCorrect
+    });
+
+    if (isAnsCorrect) {
+      setTriggerConfetti(false);
+      setTimeout(() => setTriggerConfetti(true), 50);
+    }
   };
 
   const getGradeNumberForDemo = (key: string): string => {
@@ -202,6 +219,14 @@ export const InteractiveDiagnostic: React.FC<InteractiveDiagnosticProps> = ({ on
           </div>
         </div>
       </div>
+
+      {/* Confetti celebration for quiz completion / correct answer */}
+      <ConfettiBurst
+        active={triggerConfetti}
+        onComplete={() => setTriggerConfetti(false)}
+        origin={{ x: 0.5, y: 0.45 }}
+        particleCount={75}
+      />
     </section>
   );
 };
